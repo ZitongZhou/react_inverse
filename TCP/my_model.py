@@ -49,11 +49,11 @@ class mymf:
 
         Lx = 2500.
         Ly = 1250.
-        ztop = 0.
-        zbot = -50.
         nlay = 1
         nrow = 41
         ncol = 81
+        ztop = 0.
+        zbot = -50*nlay
         delr = Lx / (ncol-1)  # spacings along a row, can be an array
         delc = Ly / (nrow-1)  # spacings along a column, can be an array
     #        delv = (ztop - zbot) / nlay
@@ -72,7 +72,7 @@ class mymf:
         modelname_mf = self.dirname + '_mf'
         mf = flopy.modflow.Modflow(modelname=modelname_mf, model_ws= self.model_ws, exe_name=exe_name_mf)
         dis = flopy.modflow.ModflowDis(mf, nlay=nlay, nrow=nrow, ncol=ncol,
-                                       delr=delr, delc=delc, top=ztop, botm=[0 - delv],nper=len(perlen_mf),
+                                       delr=delr, delc=delc, top=ztop, botm=zbot,nper=len(perlen_mf),
                                        perlen=perlen_mf)
         # Variables for the BAS package
         # active > 0, inactive = 0, or constant head < 0
@@ -86,7 +86,10 @@ class mymf:
         l_head, r_head = h_grad*Lx, 0.
         strt[:, :, 0] = l_head
         strt[:, :, -1] = r_head
-
+        # hk = np.dstack((hk,hk))
+        # hk = np.dstack((hk,hk))
+        # hk = np.swapaxes(hk, 0, 2)
+        # hk = np.swapaxes(hk, 1, 2)
         bas = flopy.modflow.ModflowBas(mf, ibound=ibound, strt=strt)
         lpf = flopy.modflow.ModflowLpf(mf, hk=hk, laytyp=laytyp)
         pcg = flopy.modflow.ModflowPcg(mf)
@@ -142,7 +145,8 @@ class mymf:
 
         al = 35.
         trpt = 0.3
-        dsp = flopy.mt3d.Mt3dDsp(mt, al=al, trpt=trpt, dmcoef=1.e-9)#dmcoef: molecular diffusion
+        trpv = 0.03
+        dsp = flopy.mt3d.Mt3dDsp(mt, al=al, trpt=trpt, trpv=trpv, dmcoef=1.e-9)#dmcoef: molecular diffusion
         lambda1 = 0.
         rct = flopy.mt3d.Mt3dRct(mt, isothm=2, ireact=1, igetsc=0, rhob=rhob, sp1=0.1,sp2 = 0.9, 
                              rc1=lambda1, rc2=lambda1)
