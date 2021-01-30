@@ -33,13 +33,20 @@ class mymf:
     modflow model for multiple well pumping
     every values are represented as 2D np array
     """
-    def __init__(self, exe_name_mf, exe_name_mt):
-        self.dirname = 'binary_files'
+    def __init__(self, dirname):
+        self.dirname = dirname + '_files'
+        workdir = os.path.join('.',)
         self.model_ws = os.path.join(workdir, self.dirname)
+        
+    def run_model(self, hk, c_spd,
+                 exe_name_mf = '/Users/zitongzhou/Downloads/pymake/examples/mf2005',
+                 exe_name_mt = '/Users/zitongzhou/Downloads/pymake/examples/mt3dms',
+                 ):
         self.exe_name_mf = exe_name_mf
         self.exe_name_mt = exe_name_mt
-        
-    def run_model(self, hk, c_spd):
+        datadir = os.path.join('..', 'mt3d_test', 'mt3dms')
+        workdir = os.path.join('.',)
+    
         if os.path.isdir(self.dirname):
             shutil.rmtree(self.dirname, ignore_errors=True)
 
@@ -55,14 +62,14 @@ class mymf:
         delv = 50
         prsity = 0.3
 
-        perlen_mf = [365*4]*5 + [365*4]*5 #day
+        perlen_mf = [365*4*10] #day
         perlen_mt = [365*4]*5 + [365*4]*5
     #     nper = len(perlen_mf)
         laytyp = 0. 
         rhob = 1.587 #bulk density of porous media g/m^3
 
         modelname_mf = self.dirname + '_mf'
-        mf = flopy.modflow.Modflow(modelname=modelname_mf, model_ws= self.model_ws, exe_name=self.exe_name_mf)
+        mf = flopy.modflow.Modflow(modelname=modelname_mf, model_ws=self.model_ws, exe_name=self.exe_name_mf)
         dis = flopy.modflow.ModflowDis(mf, nlay=nlay, nrow=nrow, ncol=ncol,
                                        delr=delr, delc=delc, top=ztop, 
                                        botm=[-delv * k for k in range(1, nlay + 1)],
@@ -89,7 +96,16 @@ class mymf:
         lmt = flopy.modflow.ModflowLmt(mf, output_file_name='mt3d_link.ftl')
 
         welspd = {}
-        welspd[0] = [0, 25, 25, 0]
+        y_wel = np.array([6, 13, 20, 27, 34,
+                6, 13, 20, 27, 34,
+                6, 13, 20, 27, 34,
+                6, 13, 20, 27, 34])# #np.random.randint(low = 5, high = 35, size = 20)
+        x_wel = np.array([1, 1, 1, 1, 1, 
+                 7, 7, 7, 7, 7,
+                 13, 13, 13, 13, 13,
+                 20, 20, 20, 20, 20])# #np.random.randint(low = 0, high = 25, size = 20)
+        welspd[0] = [[3, y_wel[i], x_wel[i], 1000.] for i in range(len(y_wel))]
+                     
         wel = flopy.modflow.ModflowWel(mf, stress_period_data=welspd)
         spd = {(0, 0): ['save head', 'save budget']}
         oc = flopy.modflow.ModflowOc(mf, stress_period_data=spd, compact=True)
@@ -100,9 +116,11 @@ class mymf:
         mt = flopy.mt3d.Mt3dms(modelname=modelname_mt, model_ws=self.model_ws, 
                                exe_name=self.exe_name_mt, 
                                modflowmodel=mf, ftlfilename='mt3d_link.ftl')
+        # nprs:, if 0, only save at the end of the stress period, 1 for head, 
+        # 10 for concentration; if -1, save every timestep
         btn = flopy.mt3d.Mt3dBtn(mt, icbund=1, 
                                  prsity=prsity, sconc=0., 
-                                 nper=len(perlen_mt), perlen=perlen_mt, nprs = -1)
+                                 nper=len(perlen_mt), perlen=perlen_mt, nprs = 0)
         dceps = 1.e-9 # small Relative Cell Concentration Gradient below which advective transport is considered
         nplane = 1 #whether the random or fixed pattern is selected for initial placement of moving particles. If NPLANE = 0, the random pattern is selected for initial placement.
         npl = 0 #number of initial particles per cell to be placed at cells where the Relative Cell Concentration Gradient is less than or equal to DCEPS.
@@ -118,7 +136,7 @@ class mymf:
 
         al = 35. #meter
         trpt = 0.3
-        trpv = 0.03
+        trpv = 0.3
         #dmcoef: molecular diffusion, m2/d
 
         dsp = flopy.mt3d.Mt3dDsp(
@@ -146,8 +164,20 @@ class mymf:
         if os.path.isfile(fname):
             os.remove(fname)
         mt.run_model(silent=True)
-     
-        return
+        
+        ucnobj = flopy.utils.UcnFile(fname)
+        
+        hds = bf.HeadFile(os.path.join(self.model_ws, self.dirname + '_mf.hds'))
+        times = hds.get_times()  # simulation time, steady state
+        heads = hds.get_data(totim=times[-1])
+        ## steady state, save the last head map
+        heads = heads[-1]
+        ##remove the binary files after running
+#         if os.path.isdir(self.dirname):
+#             shutil.rmtree(self.dirname, ignore_errors=True)
+        conc = [ucnobj.get_data(totim=t) for t in ucnobj.get_times()]
+
+        return conc, heads
     
     def simple_plot(self, c_map, title=''):
         nx = 81
@@ -175,15 +205,9 @@ class mymf:
         return
     
     
-    def head(self):
-        hds = bf.HeadFile(os.path.join(self.model_ws, self.dirname + '_mf.hds'))
-        times = hds.get_times()  # simulation time, steady state
-        heads = hds.get_data(totim=times[-1])
-        hds.close()  # close the file object for the next run
-
-        head = heads[0]
+    def plot_head(self, head, title = 'head'):
         head = np.flip(head, 0)
-        self.simple_plot(head, 'head')
+        self.simple_plot(head, title)
         
     
     def take_obs(self, cvt):
@@ -279,25 +303,23 @@ class mymf:
 if __name__ == '__main__':
     exe_name_mf = '/Users/zitongzhou/Downloads/pymake/examples/mf2005'
     exe_name_mt = '/Users/zitongzhou/Downloads/pymake/examples/mt3dms'
-    datadir = os.path.join('..', 'mt3d_test', 'mt3dms')
-    workdir = os.path.join('.',)
     start = time.time()
-    my_model = mymf(exe_name_mf, exe_name_mt)
+    my_model = mymf('binary_files')
 
     spd = {}
     for i in range(5):
         spd[i] = [
-            (3, 15, 25, 1000., -1),
+            (3, 13, 20, 1000., 2),
             ]
     spd[5] = [
-        (3, 15, 25, 0., -1)
+        (3, 13, 20, 0., 2)
         ]
 
     with open('3dkd.pkl', 'rb') as file:
         hk = np.exp(pk.load(file))
 
     my_model.run_model(hk, spd)
-    # my_model.head()
+    # my_model.plot_head()
     print(time.time() - start)
     # maps = my_model.figures()
     my_model.make_movie(layer=3)

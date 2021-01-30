@@ -22,3 +22,5 @@ bin-release/
 TCP/__pycache__/
 
 *.icloud
+
+TCP_3d/.ipynb_checkpoints/
