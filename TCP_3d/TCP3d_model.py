@@ -169,12 +169,11 @@ class mymf:
         
         hds = bf.HeadFile(os.path.join(self.model_ws, self.dirname + '_mf.hds'))
         times = hds.get_times()  # simulation time, steady state
-        heads = hds.get_data(totim=times[-1])
-        ## steady state, save the last head map
-        heads = heads[-1]
+        heads = hds.get_data(totim=times[-1])## steady state, save the last head map
+
         ##remove the binary files after running
-#         if os.path.isdir(self.dirname):
-#             shutil.rmtree(self.dirname, ignore_errors=True)
+        if os.path.isdir(self.dirname):
+            shutil.rmtree(self.dirname, ignore_errors=True)
         conc = [ucnobj.get_data(totim=t) for t in ucnobj.get_times()]
 
         return conc, heads
