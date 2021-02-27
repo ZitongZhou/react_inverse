@@ -13,21 +13,19 @@ Model:
 K: conductivity field, use TCE_3d/KD_training_data/ gen_save_data.py & K1.mat, K2.mat, K3.mat, K4.mat to generate the 3D conductivity fields, .mat files and the saved .pkl files are all in [Google Drive](https://drive.google.com/file/d/1_mRIL1jbApaRTdbS8zTzjejqjnlDMSzy/view?usp=sharing).
 ### Contaminant release location
 The release is from 1 of the 20 candidate wells as constant concentration release.
-X: well index for the 
-KLE4225 (No dim reduction) | KLE500 | KLE50
-:-----:|:------:|:-----:
 ![](TCP_3d/images/Head_well.png?raw=true)
 
 
 The training samples are generated with gen_1500.ipynb in TCP folder. 
-The location of the source is chosen from 20 candidates. The strength of the release is determined by the injection rate, the concentration in the injected water is fixed at 10000 m/V, the injection rate is varied for 10 periods, each period is 2 years' long. 
+The location of the source is chosen from 20 candidates. The strength of the release is determined by the injection rate, the concentration in the injected water is fixed at 10000 m/V, the injection rate is varied for 5 periods, each period is 5 years' long. 
 
 Therefore, the release happens for 20 years with 1 location parameter, 10 injection rate parameters.  During the release, maps are saved once every 2 years. After the release, the frequency of observation increases to 2 times a year, the observation is obtained for another 20 years, so the 50 times of observations are:
-2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 20.5, 21, 21.5, ..., 40 th year.
+5, 10, 15, ... th year.
 
-The output samples are saved in google drive in this [link](https://drive.google.com/drive/folders/10jjWGuZxqcxH_TgAFH94WE4k_N_SLsZX?usp=sharing)
-Use this command: [x_ind, x, q, mod_wels, con_rate, N_obs, N_maps] = pickle.load(file)
-X_ind: 1500 *[well index(:0-19)] for well index
-x: well locations, 1500* [y_wel(6, 13, 20, 27, 34), x_wel(1, 7, 13, 20)] for well location
-q: 1500*[10 injection rate(:0-1000)]
+The output samples are saved in google drive in this [link](https://drive.google.com/file/d/1vJr15qSvBSEtMvNi-GZ4UOnAoKmnJZTt/view?usp=sharing)
+with open('AR_dataset.pkl', 'rb') as file:
+    [AR_input, AR_output] = pk.load(file)
+The intput and output here are autoregressive input and output, as it is a 3D simulation, C*H*D*W(C=10, H=6, D=41, W=81) would be a very big matrix, causing memory problem.
 
+The autoregressive model input and output:
+![](TCP_3d/images/AR_in_out.png?raw=true)
