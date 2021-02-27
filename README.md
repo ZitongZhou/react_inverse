@@ -28,4 +28,4 @@ with open('AR_dataset.pkl', 'rb') as file:
 The intput and output here are autoregressive input and output, as it is a 3D simulation, C*H*D*W(C=10, H=6, D=41, W=81) would be a very big matrix, causing memory problem.
 
 The autoregressive model input and output:
-![](TCP_3d/images/AR_in_out.png?raw=true)
+![](images/AR_in_out.png?raw=true)
