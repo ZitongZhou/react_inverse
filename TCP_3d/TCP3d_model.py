@@ -104,7 +104,7 @@ class mymf:
                  7, 7, 7, 7, 7,
                  13, 13, 13, 13, 13,
                  20, 20, 20, 20, 20])# #np.random.randint(low = 0, high = 25, size = 20)
-        welspd[0] = [[3, y_wel[i], x_wel[i], 1000.] for i in range(len(y_wel))]
+        welspd[0] = [[3, y_wel[i], x_wel[i], 0.] for i in range(len(y_wel))]
                      
         wel = flopy.modflow.ModflowWel(mf, stress_period_data=welspd)
         spd = {(0, 0): ['save head', 'save budget']}
@@ -177,31 +177,6 @@ class mymf:
         conc = [ucnobj.get_data(totim=t) for t in ucnobj.get_times()]
 
         return conc, heads
-    
-    def simple_plot(self, c_map, title=''):
-        nx = 81
-        ny = 41
-        Lx = 2500
-        Ly = 1250
-
-        x = np.linspace(0, Lx, nx)
-        y = np.linspace(0, Ly, ny)
-        X,Y = np.meshgrid(x, y)
-        fig, axs = plt.subplots(1,1)
-    #        axs.set_xlabel('x(m)')
-    #        axs.set_ylabel('y(m)')
-        axs.set_xlim(0,Lx)
-        axs.set_ylim(0,Ly)
-        c01map = axs.imshow(c_map, cmap='jet',
-                  extent=[x.min(), x.max(), y.min(), y.max()],
-                  vmin=c_map.min(), vmax = c_map.max(),
-                  origin='lower')
-        fig.colorbar(c01map, ax=axs,shrink=0.62)
-        name = title + '.pdf'
-        plt.title(title)
-#         fig.savefig('images/'+name, format='pdf',bbox_inches='tight')
-        plt.show()
-        return
     
     
     def plot_head(self, head, title = 'head'):
@@ -298,28 +273,74 @@ class mymf:
         for i in range(len(time)):
             maps.append(ucnobj.get_data(totim=time[i])[layer,])
         return maps
+
+def simple_plot(c_map, title=''):
+    nx = 81
+    ny = 41
+    Lx = 2500
+    Ly = 1250
+
+    x = np.linspace(0, Lx, nx)
+    y = np.linspace(0, Ly, ny)
+    X,Y = np.meshgrid(x, y)
+    if len(c_map) == 41:
+        fig, axs = plt.subplots(1,1)
+    #        axs.set_xlabel('x(m)')
+    #        axs.set_ylabel('y(m)')
+        # axs.set_xlim(0,Lx)
+        # axs.set_ylim(0,Ly)
+        c01map = axs.imshow(c_map, cmap='jet',
+                  extent=[x.min(), x.max(), y.min(), y.max()],
+                  vmin=c_map.min(), vmax = c_map.max(),
+                  origin='lower')
+        fig.colorbar(c01map, ax=axs,shrink=0.62)
+    else:
+        fig, axs = plt.subplots(len(c_map)//3, 3, figsize=(7, 2.5))
+        axs = axs.flat
+        for i, ax in enumerate(axs):
+            # ax.set_xlim(0,Lx)
+            # ax.set_ylim(0,Ly)
+            c01map = ax.imshow(c_map[i], cmap='jet', interpolation='nearest',
+                      extent=[x.min(), x.max(), y.min(), y.max()],
+                      vmin=c_map[i].min(), vmax = c_map[i].max(),
+                      origin='lower')
+            ax.set_axis_off()
+            v1 = np.linspace(np.min(c_map[i]),np.max(c_map[i]), 5, endpoint=True)
+            fig.colorbar(c01map, ax=ax, fraction=0.021, pad=0.04,ticks=v1,)
+
+    plt.suptitle(title)
+    name = title + '.pdf'
+    plt.tight_layout()
+#         fig.savefig('images/'+name, format='pdf',bbox_inches='tight')
+    plt.show()
+    return
         
 if __name__ == '__main__':
     exe_name_mf = '/Users/zitongzhou/Downloads/pymake/examples/mf2005'
     exe_name_mt = '/Users/zitongzhou/Downloads/pymake/examples/mt3dms'
+    os.chdir('/Users/zitongzhou/Desktop/react_inverse/TCP_3d')
     start = time.time()
     my_model = mymf('binary_files')
 
     spd = {}
     for i in range(5):
         spd[i] = [
-            (3, 13, 20, 1000., 2),
+            (0, 13, 20, 100000., 15),
             ]
     spd[5] = [
-        (3, 13, 20, 0., 2)
+        (0, 13, 20, 0., 15)
         ]
 
     with open('3dkd.pkl', 'rb') as file:
         hk = np.exp(pk.load(file))
 
-    my_model.run_model(hk, spd)
+    conc, heads = my_model.run_model(hk, spd)
     # my_model.plot_head()
     print(time.time() - start)
     # maps = my_model.figures()
-    my_model.make_movie(layer=3)
+    for i in range(len(conc)):
+        title='conc time '+str(i)
+        simple_plot(c_map=conc[i], title=title)
+    title='head'
+    simple_plot(c_map=heads, title=title)
     # my_model.simple_plot(maps[1],'')
