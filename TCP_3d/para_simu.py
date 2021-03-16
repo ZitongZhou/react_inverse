@@ -48,7 +48,7 @@ def simu(input_file):
     ## run model
     conc, heads = my_model.run_model(kd, spd)
     
-    f_out = h5py.File('../simu_outputs/output_' + input_file[6:], "w")
+    f_out = h5py.File('/Volumes/Transcend/Desktop/reactive_inverse/simu_outputs/output_' + input_file[6:], "w")
     f_out.create_dataset('concentration', data = conc, dtype ='f', compression = 'gzip')
     f_out.create_dataset('head', data = heads, dtype ='f', compression = 'gzip')
     f_out.close()
