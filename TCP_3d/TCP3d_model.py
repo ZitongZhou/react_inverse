@@ -9,7 +9,9 @@ import shutil
 import time
 from IPython.display import clear_output
 from time import sleep
-
+from matplotlib import cm
+import matplotlib.colors
+import matplotlib.backends.backend_pdf
 # run installed version of flopy or add local path
 try:
     import flopy
@@ -18,7 +20,7 @@ except:
     sys.path.append(fpth)
     import flopy
     
-from flopy.utils.util_array import read1d
+# from flopy.utils.util_array import read1d
 mpl.rcParams['figure.figsize'] = (8, 8)
 
     
@@ -134,9 +136,9 @@ class mymf:
                                  npl=npl, nph=nph, npmin=npmin, npmax=npmax,
                                  nlsink=nlsink, npsink=npsink, percel=0.5)
 
-        al = 35. #meter
-        trpt = 0.3
-        trpv = 0.3
+        al = 8. #meter
+        trpt = 0.1
+        trpv = 0.1
         #dmcoef: molecular diffusion, m2/d
 
         dsp = flopy.mt3d.Mt3dDsp(
@@ -313,8 +315,33 @@ def simple_plot(c_map, title=''):
     plt.tight_layout()
 #         fig.savefig('images/'+name, format='pdf',bbox_inches='tight')
     plt.show()
-    return
-        
+    return fig
+  
+def plot_3d(data, title='', cut=None):
+    data = np.transpose(data, (2, 1, 0))
+    data = np.flip(data, axis=2)
+    filled = np.ones(data.shape)
+    if cut is not None:
+        filled[cut[2]:, :cut[1], (6-cut[0]):] = 0
+    x, y, z = np.indices(np.array(filled.shape) + 1)
+    
+    v1 = np.linspace(np.min(data),np.max(data), 8, endpoint=True)
+    norm = matplotlib.colors.Normalize(vmin=np.min(data), vmax=np.max(data))
+    
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.voxels(x, y, z, filled, facecolors=plt.cm.jet(norm(data)), edgecolors=None)
+    ax.set_box_aspect([250, 125, 50])
+    
+    m = cm.ScalarMappable(cmap=plt.cm.jet, norm=norm)
+    m.set_array([])
+    fig.colorbar(m, ax=ax, fraction=0.015, pad=0.04,ticks=v1,)
+    ax.set_axis_off()
+    plt.tight_layout()
+    # ax.set_title(title)
+    # plt.savefig(title+'.pdf',bbox_inches='tight')
+    return fig
+      
 if __name__ == '__main__':
     exe_name_mf = '/Users/zitongzhou/Downloads/pymake/examples/mf2005'
     exe_name_mt = '/Users/zitongzhou/Downloads/pymake/examples/mt3dms'
@@ -333,14 +360,25 @@ if __name__ == '__main__':
 
     with open('3dkd.pkl', 'rb') as file:
         hk = np.exp(pk.load(file))
-
+    
     conc, heads = my_model.run_model(hk, spd)
+    
     # my_model.plot_head()
     print(time.time() - start)
+    pdf = matplotlib.backends.backend_pdf.PdfPages("conc.pdf")
     # maps = my_model.figures()
     for i in range(len(conc)):
-        title='conc time '+str(i)
-        simple_plot(c_map=conc[i], title=title)
-    title='head'
-    simple_plot(c_map=heads, title=title)
+        title='conc_time'+str(i)
+        fig_flat = simple_plot(c_map=conc[i], title=title)
+        pdf.savefig(fig_flat)
+        fig = plot_3d(conc[i], title=title, 
+                      cut=[3, 13+1, 20-1])
+        pdf.savefig(fig)
+    pdf.close()
+    plot_3d(heads,title='heads')
+    plot_3d(np.log(hk),title='kd3d')
+    # simple_plot(c_map=heads, title=title)
     # my_model.simple_plot(maps[1],'')
+    
+    
+    
