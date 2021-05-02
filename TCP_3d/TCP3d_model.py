@@ -352,17 +352,18 @@ if __name__ == '__main__':
     spd = {}
     for i in range(5):
         spd[i] = [
-            (3, 13, 20, 100., -1),
+            (3, 12, 20, 100., -1),
             ]
     spd[5] = [
-        (3, 13, 20, 0., -1)
+        (3, 12, 20, 0., -1)
         ]
 
     with open('3dkd.pkl', 'rb') as file:
         hk = np.exp(pk.load(file))
     
     conc, heads = my_model.run_model(hk, spd)
-    
+    with open('output.pk', 'wb') as file:
+        pk.dump([conc, heads], file)
     # my_model.plot_head()
     print(time.time() - start)
     pdf = matplotlib.backends.backend_pdf.PdfPages("conc.pdf")
@@ -372,7 +373,7 @@ if __name__ == '__main__':
         fig_flat = simple_plot(c_map=conc[i], title=title)
         pdf.savefig(fig_flat)
         fig = plot_3d(conc[i], title=title, 
-                      cut=[3, 13+1, 20-1])
+                      cut=[3, 12+1, 20-1])
         pdf.savefig(fig)
     pdf.close()
     plot_3d(heads,title='heads')
