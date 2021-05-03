@@ -30,14 +30,21 @@ model_dir = exp_dir
 nf, d, h, w = 2, 2, 11, 21
 
 # Initialize generator and discriminator
-
+encoder = Encoder(outchannels=nf)
 decoder = Decoder(inchannels=nf)
+discriminator = Discriminator(inchannels=nf)
+
+encoder.load_state_dict(torch.load(model_dir + '/AAE_encoder_epoch{}.pth'.format(n_epochs)))
 decoder.load_state_dict(torch.load(model_dir + '/AAE_decoder_epoch{}.pth'.format(n_epochs)))
+discriminator.load_state_dict(torch.load(model_dir + '/AAE_discriminator_epoch{}.pth'.format(n_epochs)))
 if cuda:
+    encoder.cuda()
     decoder.cuda()
+    discriminator.cuda()
 
+encoder.eval()
 decoder.eval()
-
+discriminator.eval()
 
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor    
 
@@ -54,7 +61,7 @@ n_epochs = 300
 ckpt_epoch = None
 run_dir = exp_dir + '/' + all_over_again\
     + '/ns{}_ntr{}_bt{}_lr{}_lrn{}_ep{}'.format(
-        n_samples, n_train, batch_size, lr,
+        n_samples, n_train, batch_size, args.lr,
         lr_noise, n_epochs)
 pred_dir = run_dir + '/predictions'
 ckpt_dir = run_dir + '/checkpoints'
@@ -91,52 +98,52 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # training
 
 
 def run_surrogate(X, Par, model):
-    ya = numpy.zeros(Par.Ne, Par.Nobs)
+
     model.eval()
     log_K, source = gen_input4net(X, Par)
-    for ind in Par.Ne:
-        x = np.full((1,3,6,41,81), 0.0)           # three input channels: hydraulic conductivity field, source term, previous concentration field
-        y = np.full( (Par.Nt,2,6,41,81), 0.0) # two output channles: concentration and head fields
-        y_i_1 = np.full((6,41,81), 0.0)   # y_0 = 0
+    x = np.full((1,3,6,41,81), 0.0)           # three input channels: hydraulic conductivity field, source term, previous concentration field
+    y = np.full( (Par.Nt,2,6,41,81), 0.0) # two output channles: concentration and head fields
+    y_i_1 = np.full((6,41,81), 0.0)   # y_0 = 0
 
-        for i in range(Par.Nt):
-            x[0,0,:,:,:] = log_K           # hydraulic conductivity
-            x[0,1,:,:,:] = source[i]      # source rate
-            x[0,2,:,:,:] = y_i_1          # the i-1)^th predicted concentration field, which is treated as an input channel
-            x_tensor = Tensor(x)
-            with torch.no_grad():
-                y_hat, y_var = model.predict(x_tensor)
-            y_hat = y_hat.data.cpu().numpy()
-            y[i] = y_hat
-            y_i_1 = y_hat[0,0,:,:,:]      # the updated (i-1)^th predicted concentration field
+    for i in range(Par.Nt):
+        x[0,0,:,:,:] = log_K           # hydraulic conductivity
+        x[0,1,:,:,:] = source[i]      # source rate
+        x[0,2,:,:,:] = y_i_1          # the i-1)^th predicted concentration field, which is treated as an input channel
+        x_tensor = Tensor(x)
+        with torch.no_grad():
+            y_hat, y_var = model.predict(x_tensor)
+        y_hat = y_hat.data.cpu().numpy()
+        y[i] = y_hat
+        y_i_1 = y_hat[0,0,:,:,:]      # the updated (i-1)^th predicted concentration field
 
-        y_pred = np.full( (Par.Nt + 1,6,41,81), 0.0)
-        y_pred[:Par.Nt] = y[:,0]   # the concentration fields at Nt time instances
-        y_pred[Par.Nt]  = y[0,1]   # the hydraulic head field
-        ya[ind, :] = get_obs(sensor, y_pred)  # get the simulated outputs at observation locations using interpolation
+    y_pred = np.full( (Par.Nt + 1,6,41,81), 0.0)
+    y_pred[:Par.Nt] = y[:,0]   # the concentration fields at Nt time instances
+    y_pred[Par.Nt]  = y[0,1]   # the hydraulic head field
 
-    return ya
+    y_sim_obs = get_obs(sensor, y_pred)  # get the simulated outputs at observation locations using interpolation
+
+    return y_sim_obs
 
 def gen_input4net(X, Par):
     '''generate batch input'''
-    ## log conductivity field
-    latent_z = X[:Par.Nlat, :]
+	## log conductivity field
+	latent_z = X[:, :Par.Nlat]
     latent_z = torch.reshape(
-          Tensor(latent_z), (-1, nf, d, h, w)
-          )
-    log_K = decoder(latent_z)
+        Tensor(latent_z), (-1, nf, d, h, w)
+        )
+	log_K = decoder(latent_z)
     ## source loc
-    y_wel_samp = X[Par.Nlat, :]
-    x_wel_samp = X[Par.Nlat+1, :]
+    y_wel_samp = X[:,Par.Nlat]
+    x_wel_samp = X[:,Par.Nlat+1]
     Sy_id, Sx_id = step_loc(y_wel_samp, x_wel_samp)
     ## source rate
-    source_rate = X[Par.Nlat+2:, :]
-    source = np.zeros(Par.Ne, Par.Nt, 6, 41, 81,)
-    for j in range(Par.Nt_re): #j'th timestep of release
-        for i in range(Par.Ne): #i'th sample
-            source[i, j, 3, Sy_id[i], Sx_id[i]] = source_rate[i, j]
+    source_rate = X[:,Par.Nlat+2:]
+	source = np.zeros((Par.Ne, Par.Nt, 6, 41, 81,), 0.0)
+	for j in range(Par.Nt_re): #j'th timestep of release
+        for i in range(Par.Ne) #i'th sample
+		  source[i, j, 3, Sy_id[i], Sx_id[i]] = source_rate[i, j]
 
-    return log_K, source
+	return log_K, source
 
 def get_obs(sensor, y_pred):
 
@@ -146,11 +153,11 @@ def get_obs(sensor, y_pred):
 
     return y_sim_obs
 
-def gen_init(Ne, Par, seed=888):
+def gen_init(Ne, Par):
     x = np.zeros((Par.Npar, Ne))
-    np.random.seed(seed)
+    np.random.seed(888)
     ## log_K
-    x[:Par.Nlat, :] = np.random.randn(Par.Nlat, Ne)
+    x[:Par.Nlat] = np.random.randn(Par.Nlat, Ne)
     ## release locations
     y_wel = np.array([125, 125*3, 125*5, 125*7, 125*9])
     x_wel = np.array([125, 125*3, 125*5, 125*7])
@@ -218,8 +225,6 @@ Par.para_range = np.asarray(
         [1200, 812.5] + [1000 for i in range(Par.Nt_re)] + [5 for i in range(Par.Nlat)]
     ]
 )
-
-
 
 
 
