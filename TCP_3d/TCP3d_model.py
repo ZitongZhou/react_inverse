@@ -339,7 +339,7 @@ def plot_3d(data, title='', cut=None):
     ax.set_axis_off()
     plt.tight_layout()
     # ax.set_title(title)
-    # plt.savefig(title+'.pdf',bbox_inches='tight')
+    plt.savefig(title+'.pdf',bbox_inches='tight')
     return fig
       
 if __name__ == '__main__':
@@ -364,6 +364,8 @@ if __name__ == '__main__':
     conc, heads = my_model.run_model(hk, spd)
     with open('output.pk', 'wb') as file:
         pk.dump([conc, heads], file)
+    # with open('output.pk', 'rb') as file:
+    #     [conc, heads] = pk.load(file)
     # my_model.plot_head()
     print(time.time() - start)
     pdf = matplotlib.backends.backend_pdf.PdfPages("conc.pdf")
@@ -376,8 +378,8 @@ if __name__ == '__main__':
                       cut=[3, 12+1, 20-1])
         pdf.savefig(fig)
     pdf.close()
-    plot_3d(heads,title='heads')
-    plot_3d(np.log(hk),title='kd3d')
+    plot_3d(heads,title='heads',cut=[3, 12+1, 20-1])
+    plot_3d(np.log(hk),title='kd3d',cut=[3, 12+1, 20-1])
     # simple_plot(c_map=heads, title=title)
     # my_model.simple_plot(maps[1],'')
     
