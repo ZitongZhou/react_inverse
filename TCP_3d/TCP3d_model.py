@@ -136,9 +136,9 @@ class mymf:
                                  npl=npl, nph=nph, npmin=npmin, npmax=npmax,
                                  nlsink=nlsink, npsink=npsink, percel=0.5)
 
-        al = 8. #meter
-        trpt = 0.1
-        trpv = 0.1
+        al = 35. #meter
+        trpt = 0.3
+        trpv = 0.3
         #dmcoef: molecular diffusion, m2/d
 
         dsp = flopy.mt3d.Mt3dDsp(
@@ -362,24 +362,24 @@ if __name__ == '__main__':
         hk = np.exp(pk.load(file))
     
     conc, heads = my_model.run_model(hk, spd)
-    with open('output.pk', 'wb') as file:
-        pk.dump([conc, heads], file)
-    # with open('output.pk', 'rb') as file:
-    #     [conc, heads] = pk.load(file)
-    # my_model.plot_head()
-    print(time.time() - start)
-    pdf = matplotlib.backends.backend_pdf.PdfPages("conc.pdf")
-    # maps = my_model.figures()
-    for i in range(len(conc)):
-        title='conc_time'+str(i)
-        fig_flat = simple_plot(c_map=conc[i], title=title)
-        pdf.savefig(fig_flat)
-        fig = plot_3d(conc[i], title=title, 
-                      cut=[3, 12+1, 20-1])
-        pdf.savefig(fig)
-    pdf.close()
-    plot_3d(heads,title='heads',cut=[3, 12+1, 20-1])
-    plot_3d(np.log(hk),title='kd3d',cut=[3, 12+1, 20-1])
+    # with open('output.pk', 'wb') as file:
+    #     pk.dump([conc, heads], file)
+    # # with open('output.pk', 'rb') as file:
+    # #     [conc, heads] = pk.load(file)
+    # # my_model.plot_head()
+    # print(time.time() - start)
+    # pdf = matplotlib.backends.backend_pdf.PdfPages("conc.pdf")
+    # # maps = my_model.figures()
+    # for i in range(len(conc)):
+    #     title='conc_time'+str(i)
+    #     fig_flat = simple_plot(c_map=conc[i], title=title)
+    #     pdf.savefig(fig_flat)
+    #     fig = plot_3d(conc[i], title=title, 
+    #                   cut=[3, 12+1, 20-1])
+    #     pdf.savefig(fig)
+    # pdf.close()
+    # plot_3d(heads,title='heads',cut=[3, 12+1, 20-1])
+    # plot_3d(np.log(hk),title='kd3d',cut=[3, 12+1, 20-1])
     # simple_plot(c_map=heads, title=title)
     # my_model.simple_plot(maps[1],'')
     

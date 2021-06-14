@@ -1,4 +1,4 @@
-# Source identification with HMC for reactive transport
+# Source identification with ES-MDA for reactive transport
 control + shift + m to preview
 ## Setting up
 Use flopy for the flow and transport simulation.
