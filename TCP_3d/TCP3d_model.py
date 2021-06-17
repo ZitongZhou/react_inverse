@@ -170,14 +170,21 @@ class mymf:
         ucnobj = flopy.utils.UcnFile(fname)
         
         hds = bf.HeadFile(os.path.join(self.model_ws, self.dirname + '_mf.hds'))
-        times = hds.get_times()  # simulation time, steady state
-        heads = hds.get_data(totim=times[-1])## steady state, save the last head map
-
+        try:
+            times = hds.get_times()  # simulation time, steady state
+            heads = hds.get_data(totim=times[-1])## steady state, save the last head map
+        except:
+            heads = np.zeros(1)
+#         ##remove the binary files after running
+#         if os.path.isdir(self.dirname):
+#             shutil.rmtree(self.dirname, ignore_errors=True)
+        try:  ##there might be problem when use ucnobj.get_data, the dimension doesn't agree
+            conc = [ucnobj.get_data(totim=t) for t in ucnobj.get_times()]
+        except:
+            conc = np.zeros(1)
         ##remove the binary files after running
         if os.path.isdir(self.dirname):
             shutil.rmtree(self.dirname, ignore_errors=True)
-        conc = [ucnobj.get_data(totim=t) for t in ucnobj.get_times()]
-
         return conc, heads
     
     
