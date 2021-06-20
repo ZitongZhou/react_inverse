@@ -28,7 +28,18 @@ mpl.rcParams['figure.figsize'] = (8, 8)
 # print('numpy version: {}'.format(np.__version__))
 # print('matplotlib version: {}'.format(mpl.__version__))
 # print('flopy version: {}'.format(flopy.__version__))
-
+SMALL_SIZE = 12
+MEDIUM_SIZE = 14
+BIGGER_SIZE = 16
+plt.rc('font',**{'family':'serif','serif':['Times']})
+plt.rcParams['text.usetex'] = True
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=SMALL_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)
 
 class mymf:
     """
@@ -338,7 +349,8 @@ def plot_3d(data, title='', cut=None):
     fig = plt.figure()
     ax = plt.axes(projection='3d')
     ax.voxels(x, y, z, filled, facecolors=plt.cm.jet(norm(data)), edgecolors=None)
-    ax.set_box_aspect([250, 125, 50])
+    # ax.set_box_aspect([250, 125, 50])
+    ax.set_box_aspect([150,180,105])
     
     m = cm.ScalarMappable(cmap=plt.cm.jet, norm=norm)
     m.set_array([])
@@ -348,7 +360,41 @@ def plot_3d(data, title='', cut=None):
     # ax.set_title(title)
     plt.savefig(title+'.pdf',bbox_inches='tight')
     return fig
-      
+
+def plot_3d_2(real, gen, title='', cut=None):
+    fig = plt.figure()
+    data_all = [real, gen]
+
+    i = 1
+    for data in data_all:
+        data = np.transpose(data, (2, 1, 0))
+        data = np.flip(data, axis=2)
+        vmin = np.min(np.array(data))
+        vmax = np.max(np.array(data))
+
+        v1 = np.linspace(vmin,vmax, 8, endpoint=True)
+        filled = np.ones(data.shape)
+        if cut is not None:
+            filled[cut[2]:, :cut[1], (6-cut[0]):] = 0
+        x, y, z = np.indices(np.array(filled.shape) + 1)
+        
+        norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax)
+        
+        ax = fig.add_subplot(1, 2, i, projection='3d')
+        ax.voxels(x, y, z, filled, facecolors=plt.cm.jet(norm(data)), edgecolors=None)
+        ax.set_box_aspect([250, 125, 50])
+        
+        m = cm.ScalarMappable(cmap=plt.cm.jet, norm=norm)
+        m.set_array([])
+        # ax.set_axis_off()
+        i += 1
+        fig.colorbar(m, ax=ax, fraction=0.02, pad=0.04, shrink=0.9,ticks=v1,)
+        
+    plt.tight_layout()
+    # ax.set_title(title)
+    # plt.savefig(title+'.pdf',bbox_inches='tight')
+    return fig
+
 if __name__ == '__main__':
     exe_name_mf = '/Users/zitongzhou/Downloads/pymake/examples/mf2005'
     exe_name_mt = '/Users/zitongzhou/Downloads/pymake/examples/mt3dms'
@@ -369,6 +415,8 @@ if __name__ == '__main__':
         hk = np.exp(pk.load(file))
     
     conc, heads = my_model.run_model(hk, spd)
+    fig = plot_3d_2(np.log(hk), heads,'')
+    fig.savefig('logk_head.pdf')
     # with open('output.pk', 'wb') as file:
     #     pk.dump([conc, heads], file)
     # # with open('output.pk', 'rb') as file:
