@@ -2,7 +2,7 @@ import sys
 import os
 import numpy as np
 import matplotlib as mpl
-import pickle as pk
+import pickle as pkl
 import matplotlib.pyplot as plt
 import flopy.utils.binaryfile as bf
 import shutil
@@ -386,7 +386,7 @@ def plot_3d_2(real, gen, title='', cut=None):
         
         m = cm.ScalarMappable(cmap=plt.cm.jet, norm=norm)
         m.set_array([])
-        # ax.set_axis_off()
+        ax.set_axis_off()
         i += 1
         fig.colorbar(m, ax=ax, fraction=0.02, pad=0.04, shrink=0.9,ticks=v1,)
         
@@ -411,16 +411,17 @@ if __name__ == '__main__':
         (3, 12, 20, 0., -1)
         ]
 
-    with open('3dkd.pkl', 'rb') as file:
-        hk = np.exp(pk.load(file))
-    
-    conc, heads = my_model.run_model(hk, spd)
-    fig = plot_3d_2(np.log(hk), heads,'')
-    fig.savefig('logk_head.pdf')
+    # with open('3dkd.pkl', 'rb') as file:
+    #     hk = np.exp(pkl.load(file))
+    with open('/Volumes/GoogleDrive/My Drive/react_inverse/ILUES/real_hk_data.pkl','rb') as file:
+        [real_hk, real_conc, real_source_loc, real_source_rate, meas_data, meas_sig] = pkl.load(file)    
+    # conc, heads = my_model.run_model(hk, spd)
+    fig = plot_3d_2(real_hk, real_conc[0],'')
+    fig.savefig('logk_head.pdf',bbox_inches='tight')
     # with open('output.pk', 'wb') as file:
-    #     pk.dump([conc, heads], file)
+    #     pkl.dump([conc, heads], file)
     # # with open('output.pk', 'rb') as file:
-    # #     [conc, heads] = pk.load(file)
+    # #     [conc, heads] = pkl.load(file)
     # # my_model.plot_head()
     # print(time.time() - start)
     # pdf = matplotlib.backends.backend_pdf.PdfPages("conc.pdf")
