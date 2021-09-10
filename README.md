@@ -17,7 +17,7 @@ ESMDA-MT3D.ipynb includes the Jupyter notebook scripts to perform ESMDA inversio
 
 ## CAAE-DenseED-ESMDA
 This folder includes the DenseED convolutional neural network surrogate model construction, and the CAAE-DenseED-ESMDA inversion.
-## DenseED surrogate model
+### DenseED surrogate model
 Training/testing datasets and the training GoogleColab notebook, together with a model checkpoint can be found in CAAE-DenseED-ESMDA folder.
 The autoregressive model input and output are illustrated in the following figure, together with the architecture of the DenseED convolutional neural network architecture:
 ![](images/denseED_arch.png?raw=true)
