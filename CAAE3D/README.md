@@ -5,3 +5,4 @@ The combined training+testing image is shown here:
 ![](logk_training.png?raw=true)
 # CAAE training
 CAAE.ipynb is the GoogleColab notebook to train the CAAE models with the data given above.
+The model checkpoint used in the paper is saved in this [link](https://drive.google.com/drive/folders/16KzID6kBDueNcETOw5xPQ9NXIL3VTEzu?usp=sharing).
