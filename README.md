@@ -9,7 +9,7 @@ The training/testing data for CAAE of a three dimensional conductivity field can
 ## DenseED surrogate forward model
 Training/testing datasets and the training GoogleColab notebook, together with a model checkpoint can be found in CAAE-DenseED-ESMDA folder.
 The autoregressive model input and output are illustrated in the following figure, together with the architecture of the DenseED convolutional neural network architecture:
-![](images/DenseED_arch.png?raw=true)
+![](images/denseED_arch.png?raw=true)
 
 ## ESMDA inversion
 ### CAAE-ESMDA
