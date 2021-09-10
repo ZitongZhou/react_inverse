@@ -5,7 +5,7 @@ This repo includes the construction of two neural networks (CAAE and DenseED), a
 The organization of the three folders are shown below: 
 ## CAAE
 ### parameterization of the hydraulic conductivity field
-The training/testing data for CAAE of a three dimensional conductivity field can be found in the sub-folders in CAAE3D, CAAE3D/CAAE.ipynb is the GoogleColab notebook for CAAE model training.
+The training/testing data for CAAE of a three dimensional conductivity field can be found in CAAE, CAAE/CAAE.ipynb is the GoogleColab notebook for CAAE model training.
 ![](images/CAAE_test.png?raw=true)
 
 ## CAAE-ESMDA
