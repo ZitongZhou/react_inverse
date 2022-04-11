@@ -13,6 +13,9 @@ Simulations are packed as autoregressive type of input and output, and can be fo
 ## ESMDA inversion
 ESMDA-MT3D.ipynb is the jupyter notebook for CAAE-ESMDA inversion with MODFLOW+MT3DMS simulators.
 The resulting 11 ESMDA ensembles can be found in this [link](https://drive.google.com/drive/folders/1NQObllG025n1LN6PXVjYd5ULNU2xylRS?usp=sharing) .
+
+The three reference datasets are attached as real_hk_data.pkl, set2_hk_data.pkl, set3_hk_data.pkl.
+
 The inspection of the ESMDA results are done together with CAAE-DenseED-ESMDA results inspection in CAAE-DenseED-ESMDA/CAAE-DenseED-ESMDA.ipynb GoogleColab notebook.
 
 
