@@ -1,4 +1,4 @@
-# Hydraulic conductivity and comtaminant source identification with ESMDA for reactive transport
+# Deep Learning for Simultaneous Inference of Hydraulic and Transport Properties
 
 This repo includes the construction of two neural networks (CAAE and DenseED), and ESMDA inversion, aiming to solve the inverse problem for the hydraulic conductivity field and the contaminant release history in a three dimensional domain. 
  
