@@ -30,6 +30,19 @@ The autoregressive model input and output are illustrated in the following figur
 ### CAAE-ESMDA inversion
 CAAE-ESMDA/CAAE-DenseED-ESMDA.ipynb includes the Jupyter notebook scripts to perform ESMDA inversion.
 
-
+### Citation
+If you find this useful, please cite us:
+```
+@article{zhou2022deep,
+  title={Deep Learning for Simultaneous Inference of Hydraulic and Transport Properties},
+  author={Zhou, Zitong and Zabaras, Nicholas and Tartakovsky, Daniel M},
+  journal={Water Resources Research},
+  volume={58},
+  number={10},
+  pages={e2021WR031438},
+  year={2022},
+  publisher={Wiley Online Library}
+}
+```
 
 
